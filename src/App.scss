@@ -1,0 +1,30 @@
+.container{
+  max-width: 1170px;
+  padding:0 10px;
+  width: 100%;
+  margin: auto;
+}
+.main-input{
+  border-radius: 100px;
+  padding:16px 40px;
+  border:1px solid #333;
+  &:focus{
+    outline: none;
+  }
+}
+
+.hint-item{
+  padding: 15px;
+  max-width: 250px;
+  border-radius: 100px;
+  box-sizing: border-box;
+  &.active{
+    background: rgba(210, 230, 37, 0.7)
+  }
+  &:hover{
+    background: rgba(#00bcd5 ,0.2);
+    cursor: pointer;
+  }
+}
+
+
