@@ -14,24 +14,25 @@ class App extends React.Component {
     this.setState({ inputValue: e.target.value })
     this.dataHandler(e.target.value.toLowerCase())
   }
+
   onKeyDown = (e) => {
     let { indexActiveItem } = this.state
     switch (e.keyCode) {
       case 38:
         indexActiveItem--
-        this.addActive(indexActiveItem)
+        this.defineIndexActive(indexActiveItem)
         break
       case 40:
         indexActiveItem++
-        this.addActive(indexActiveItem)
+        this.defineIndexActive(indexActiveItem)
         break
       case 13:
-        this.choiseSelect(indexActiveItem)
+        this.choiceSelect(indexActiveItem)
         break
     }
   }
-
-  choiseSelect = (indexCurrent) => {
+  //Получаем индекс выбранного элемента.
+  choiceSelect = (indexCurrent) => {
     const { data } = this.state
     if (data !== null) {
       this.setState(() => ({
@@ -41,6 +42,7 @@ class App extends React.Component {
       }))
     }
   }
+  // фильруем данные по символам с инпута.
   dataHandler = (value) => {
     let arrdata = []
     if (value.length > 1) {
@@ -55,7 +57,8 @@ class App extends React.Component {
       this.setState({ data: null })
     }
   }
-  addActive = (indexActiveItem) => {
+  //получаем индекс активного элемента
+  defineIndexActive = (indexActiveItem) => {
     const { data } = this.state
     if (data === null) {
       return false
@@ -70,10 +73,12 @@ class App extends React.Component {
       indexActiveItem,
     }))
   }
+
   render() {
     const { data, indexActiveItem, inputValue } = this.state
     let resultData = []
     if (data !== null) {
+      // готовим массив данных к выводу
       resultData = data.map((item, i) => {
         if (indexActiveItem !== null && indexActiveItem === i) {
           return (
@@ -87,7 +92,7 @@ class App extends React.Component {
             key={i}
             className="hint-item"
             onClick={() => {
-              this.choiseSelect(i)
+              this.choiceSelect(i)
             }}
           >
             {item}
