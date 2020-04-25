@@ -12,7 +12,7 @@ const getSearchData = createAsyncThunk(
 const autoCompleteSlice = createSlice({
   name: 'autoComplete',
   initialState: {
-    data: null,
+    data: [],
   },
   extraReducers: {
     [getSearchData.fulfilled]: (state, action) => {
