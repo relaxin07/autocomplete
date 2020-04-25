@@ -1,32 +1,56 @@
 import React from 'react'
 import './App.scss'
+import { bindActionCreators } from 'redux'
+import * as actions from './store/modules/autocomplete'
+import { connect } from 'react-redux'
+import equal from 'deep-equal'
+import Autocomplete from './autocomplete/Autocomplete'
 
-const renderData = (arr, indexActive) => {
-  if (arr === null) {
-    return false
+const mapState = ({ autoComplete: { data } }) => {
+  return { data }
+}
+const mapDispatch = (dispatch) => {
+  const { getSearchData } = bindActionCreators(actions, dispatch)
+  return { getSearchData }
+}
+
+class App extends React.Component {
+  minCountSymbols = 2
+  state = {
+    data: [],
   }
-  return arr.map((item, i) => {
-    for (const val in item) {
-      let activeClass = i === indexActive ? 'active' : ''
-      return (
-        <div key={i} className={`hint__item ${activeClass}`}>
-          {item[val]}
-        </div>
-      )
+
+  componentDidUpdate(prevProps) {
+    if (!equal(prevProps.data, this.props.data)) {
+      this.setState(() => ({ data: this.handlerPrepareData(this.props.data) }))
     }
-  })
+  }
+
+  handlerPrepareData = (data) => {
+    if (data === null) {
+      return null
+    }
+    return data.map((item, i) => {
+      if (typeof item !== 'object') {
+        return { value: item, label: i }
+      } else {
+        for (const val in item) {
+          return { value: item[val], label: val }
+        }
+      }
+    })
+  }
+
+  render() {
+    const { data } = this.state
+    return (
+      <Autocomplete
+        data={data}
+        minCountSymbols={this.minCountSymbols}
+        onGetSearchData={this.props.getSearchData}
+      />
+    )
+  }
 }
 
-function App(props) {
-  const { indexActive, input } = props
-  let resultRender = renderData(props.prepareData(props.data), indexActive)
-  return (
-    <div className="container">
-      <h2>Selectbox</h2>
-      {input}
-      <div>{resultRender}</div>
-    </div>
-  )
-}
-
-export default App
+export default connect(mapState, mapDispatch)(App)
