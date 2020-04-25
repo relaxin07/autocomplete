@@ -1,66 +1,72 @@
 import React from 'react'
-import { connect } from 'react-redux'
-import App from '../App'
-import * as actions from '../store/modules/autocomplete/index'
-import { bindActionCreators } from 'redux'
+import equal from 'deep-equal'
+import PropTypes from 'prop-types'
 
 class Autocomplete extends React.Component {
   state = {
-    data: null,
-    inputValue: '',
+    data: [],
+    selectValue: '',
     indexActiveItem: -1,
+    isShowData: false,
   }
 
-  componentDidUpdate(prevProps, prevState) {
-    if (prevProps.data !== this.props.data) {
-      this.setState(() => ({
-        data: this.props.data,
-      }))
+  static propTypes = {
+    data: PropTypes.array,
+    minCountSymbols: PropTypes.number,
+    onGetSearchData: PropTypes.func,
+  }
+
+  componentDidUpdate(prevProps) {
+    if (!equal(prevProps.data, this.props.data)) {
+      this.setState(() => ({ data: this.props.data }))
     }
   }
-  onKeyDown = (e) => {
+
+  handlerKeyDown = ({ keyCode }) => {
     let { indexActiveItem } = this.state
-    switch (e.keyCode) {
+    switch (keyCode) {
       case 38:
-        indexActiveItem--
-        this.defineIndexActive(indexActiveItem)
+        this.handlerDefineIndexActive(indexActiveItem - 1)
         break
       case 40:
-        indexActiveItem++
-        this.defineIndexActive(indexActiveItem)
+        this.handlerDefineIndexActive(indexActiveItem + 1)
         break
       case 13:
-        this.choiceSelect(indexActiveItem)
+        this.handlerChoiceSelect(indexActiveItem)
         break
     }
   }
-  onChange = (e) => {
-    this.setState({ inputValue: e.target.value, indexActiveItem: -1 })
-    if (e.target.value.length > 1) {
-      this.props.getSearchData(e.target.value.toLowerCase())
+  handlerChangeInput = (event) => {
+    const { value } = event.target
+    this.setState({ selectValue: value, indexActiveItem: -1 })
+
+    if (value.length > this.props.minCountSymbols) {
+      this.props.onGetSearchData(value.toLowerCase())
+      this.setState(() => ({
+        isShowData: true,
+      }))
     } else {
       this.setState(() => ({
-        data: null,
+        isShowData: false,
       }))
     }
   }
   //Запоминаем текст выбранного элемента
-  choiceSelect = (indexCurrent) => {
-    const { data } = this.state
-    if (data !== null) {
-      this.setState(() => ({
-        inputValue: data[indexCurrent],
-        data: null,
-        indexActiveItem: -1,
-      }))
-    }
-  }
-  // определяем активный индекс элемента
-  defineIndexActive = (indexActiveItem) => {
-    const { data } = this.state
-    if (data === null) {
+  handlerChoiceSelect = (indexCurrent) => {
+    if (indexCurrent === -1) {
       return false
     }
+    const { data } = this.state
+    const { value } = data[indexCurrent]
+    this.setState(() => ({
+      selectValue: value,
+      data: [],
+      indexActiveItem: -1,
+    }))
+  }
+  // определяем активный индекс элемента
+  handlerDefineIndexActive = (indexActiveItem) => {
+    const { data } = this.state
     if (indexActiveItem === data.length) {
       indexActiveItem = 0
     }
@@ -71,49 +77,39 @@ class Autocomplete extends React.Component {
       indexActiveItem,
     }))
   }
-  // подготавливаем массив данных к рендеру.
-  prepareData = (data) => {
-    if (data === null) {
-      return null
-    }
-    return data.map((item) => {
-      if (typeof item !== 'object') {
-        return { myValue: item }
-      }
+
+  handlerRenderData = (arr, indexActive) => {
+    return arr.map(({ value }, i) => {
+      let activeClass = i === indexActive ? 'active' : ''
+      return (
+        <div
+          key={i}
+          onClick={() => this.handlerChoiceSelect(i)}
+          className={`hint__item ${activeClass}`}
+        >
+          {value}
+        </div>
+      )
     })
   }
 
   render() {
-    const { inputValue, data, indexActiveItem } = this.state
+    const { selectValue, data, indexActiveItem, isShowData } = this.state
+    let renderData = isShowData ? this.handlerRenderData(data, indexActiveItem) : null
     return (
-      <App
-        data={data}
-        prepareData={this.prepareData}
-        indexActive={indexActiveItem}
-        input={
-          <input
-            className="main-input"
-            type="text"
-            value={inputValue}
-            onChange={(event) => {
-              this.onChange(event)
-            }}
-            onKeyDown={(event) => {
-              this.onKeyDown(event)
-            }}
-          />
-        }
-      />
+      <div className="container">
+        <h2>Selectbox</h2>
+        <input
+          className="main-input"
+          type="text"
+          value={selectValue}
+          onChange={this.handlerChangeInput}
+          onKeyDown={this.handlerKeyDown}
+        />
+        {renderData}
+      </div>
     )
   }
 }
 
-const mapState = ({ autoComplete: { data } }) => {
-  return { data }
-}
-const mapDispatch = (dispatch) => {
-  const { getSearchData } = bindActionCreators(actions, dispatch)
-  return { getSearchData }
-}
-
-export default connect(mapState, mapDispatch)(Autocomplete)
+export default Autocomplete
